@@ -1,0 +1,91 @@
+module vending_m(clk,rst,coin,p1,r1);
+input clk,rst;
+input [1:0] coin;
+output reg p1,r1;
+parameter s0=3'b000, s1=3'b001,s2=3'b010,s3=3'b011,s4=3'b100;
+reg [2:0] ps,ns;
+always @ (posedge clk)
+begin
+if(rst==1'b0)
+ps<=s0;
+else
+ps<=ns;
+end
+always @ (ps or coin)
+begin
+p1=1'b0;
+r1=1'b0;
+ns=s0;
+case(ps)
+s0: begin
+if (coin==2'b01)
+ns=s1;
+else if (coin == 2'b10)
+ns=s2;
+else
+ns=s0;
+end
+s1: begin
+if (coin==2'b01)
+ns=s2;
+else
+begin
+ns=s3;
+p1=1'b1;
+end
+end
+s2: begin
+if (coin==2'b01)
+begin
+ns=s3;
+p1=1'b1;
+end
+else
+begin
+ns=s4;
+p1=1'b1;
+r1=1'b1;
+end
+end
+s3: begin
+ns=s0;
+p1=1'b1;
+end
+s4:begin
+ns=s0;
+p1=1'b1;
+r1=1'b1;
+end
+endcase
+end
+endmodule
+
+//testbench
+module Vending_tst();
+reg clk,rst;
+reg [1:0] coin;
+wire p1,r1;
+vending_m m1(.clk(clk),.rst(rst),.coin(coin),.p1(p1),.r1(r1));
+initial
+begin
+clk=1'b1;
+coin=2'b00;
+rst=1'b0;
+end
+always
+#5 clk=~clk;
+initial
+begin
+#10 rst=1'b1;
+#20 coin =2'b01;
+#20 coin =2'b10;
+#20 coin =2'b01;
+#20 coin =2'b10;
+#20 coin =2'b01;
+end
+initial
+begin
+$monitor ($time, "The value of clk=%b coin=%d p1=%b r1=%b",clk,coin,p1,r1);
+#400 $stop;
+end
+endmodule
